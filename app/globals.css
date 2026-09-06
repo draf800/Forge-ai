@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+html,
+body {
+  background: #191a1d;
+  color: #edeae2;
+}
+
+::selection {
+  background: #c1603d;
+  color: #191a1d;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #33353a;
+  border-radius: 4px;
+}
