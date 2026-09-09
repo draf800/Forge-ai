@@ -42,7 +42,6 @@ export default function Builder() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Generation failed.");
-
       const files = installable ? addPwaSupport(data.files, instruction.slice(0, 30)) : data.files;
       const finalSite = { ...data, files };
       setSite(finalSite);
@@ -74,19 +73,38 @@ export default function Builder() {
     setActivateStatus(res.ok ? `Live at: ${data.written.join(", ")}` : data.error);
   }
 
+  async function handleDeploy() {
+    if (!site) return;
+    setError("");
+    setSaveStatus("Deploying…");
+    const res = await fetch("/api/deploy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        files: site.files,
+        projectName: turns[0]?.text?.slice(0, 30) || "forge-site",
+      }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      setSaveStatus("");
+      window.open(data.url, "_blank");
+    } else {
+      setSaveStatus("");
+      setError(data.error || "Deploy failed.");
+    }
+  }
+
   async function handleSave() {
     if (!site) return;
     setSaveStatus("Saving…");
     const supabase = supabaseBrowser();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setSaveStatus("");
       window.location.href = "/login";
       return;
     }
-
     const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -159,6 +177,13 @@ export default function Builder() {
             Download .zip
           </button>
           <button
+            onClick={handleDeploy}
+            disabled={!site}
+            className="rounded-sm bg-forge-ember px-3 py-1.5 text-xs font-medium text-forge-bg disabled:opacity-40"
+          >
+            🚀 Deploy live
+          </button>
+          <button
             onClick={handleSave}
             disabled={!site}
             className="rounded-sm bg-forge-brass px-3 py-1.5 text-xs font-medium text-forge-bg disabled:opacity-40"
@@ -174,8 +199,7 @@ export default function Builder() {
             {turns.length === 0 && (
               <p className="text-sm text-forge-mute">
                 Describe a site to start. After the first build, keep chatting to refine it —
-                "make the header sticky," "add a testimonials section," "change the accent color to
-                green."
+                "make the header sticky," "add a testimonials section," "change the accent color to green."
               </p>
             )}
             {turns.map((t, i) => (
@@ -194,41 +218,3 @@ export default function Builder() {
               {site.suggestedTables.map((t) => (
                 <p key={t.name} className="text-forge-mute">
                   {t.name}: {t.columns.join(", ")}
-                </p>
-              ))}
-            </div>
-          )}
-
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
-            }}
-            placeholder={
-              site
-                ? "Keep refining: 'add a pricing section', 'make it dark mode'…"
-                : "Describe the site: e.g. 'A landing page for a pour-over coffee subscription, with an email signup form and a pricing section.'"
-            }
-            className="h-24 resize-none rounded-sm border border-forge-line bg-forge-panel p-3 text-sm outline-none focus:border-forge-ember"
-          />
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            className="rounded-sm bg-forge-ember px-4 py-2 text-sm font-medium text-forge-bg hover:brightness-110 disabled:opacity-50"
-          >
-            {loading ? "Building…" : site ? "Apply change" : "Build it"}
-          </button>
-
-          <div className="h-48 shrink-0 overflow-hidden">
-            <FileExplorer files={site?.files || []} />
-          </div>
-        </div>
-
-        <div className="flex-1">
-          <PreviewPane files={site?.files || []} />
-        </div>
-      </div>
-    </main>
-  );
-}
