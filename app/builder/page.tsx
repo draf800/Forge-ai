@@ -218,3 +218,41 @@ export default function Builder() {
               {site.suggestedTables.map((t) => (
                 <p key={t.name} className="text-forge-mute">
                   {t.name}: {t.columns.join(", ")}
+                </p>
+              ))}
+            </div>
+          )}
+
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
+            }}
+            placeholder={
+              site
+                ? "Keep refining: 'add a pricing section', 'make it dark mode'…"
+                : "Describe the site: e.g. 'A landing page for a pour-over coffee subscription, with an email signup form and a pricing section.'"
+            }
+            className="h-24 resize-none rounded-sm border border-forge-line bg-forge-panel p-3 text-sm outline-none focus:border-forge-ember"
+          />
+          <button
+            onClick={handleGenerate}
+            disabled={loading}
+            className="rounded-sm bg-forge-ember px-4 py-2 text-sm font-medium text-forge-bg hover:brightness-110 disabled:opacity-50"
+          >
+            {loading ? "Building…" : site ? "Apply change" : "Build it"}
+          </button>
+
+          <div className="h-48 shrink-0 overflow-hidden">
+            <FileExplorer files={site?.files || []} />
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <PreviewPane files={site?.files || []} />
+        </div>
+      </div>
+    </main>
+  );
+}
